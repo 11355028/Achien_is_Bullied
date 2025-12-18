@@ -7,12 +7,13 @@
     <style>
         :root {
             --bg-dark: #0d0d0d;
-            --tab-simple: #1a2a1a;
-            --tab-hard: #2a0a1a;
-            --tab-friend: #1a1a2a;
-            --accent-simple: #00d4ff;
-            --accent-hard: #ff0055;
-            --accent-friend: #00ff88;
+            /* 顏色更新：紅、紫、藍 */
+            --tab-simple: #2a0a0a; /* 熙熙紅 */
+            --tab-hard: #1a0a2a;   /* 小恩怨紫 */
+            --tab-friend: #0a1a2a; /* 小黑帽藍 */
+            --accent-simple: #ff4d4d;
+            --accent-hard: #bf55ff;
+            --accent-friend: #00a2ff;
         }
 
         body {
@@ -29,13 +30,13 @@
 
         /* 小黑帽支持按鈕 */
         #friend-unlock {
-            display: none; /* 初始隱藏 */
+            display: none; 
             position: fixed;
             top: 20px;
             left: 20px;
             width: 90px;
             height: 90px;
-            background: #1a1a2a;
+            background: #0a1a2a;
             border: 2px solid var(--accent-friend);
             border-radius: 50%;
             cursor: pointer;
@@ -48,7 +49,7 @@
             padding: 10px;
             box-shadow: 0 0 15px var(--accent-friend);
             transition: all 0.3s;
-            display: flex;
+            display: none; /* 由 JS 控制顯示 */
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
@@ -67,9 +68,9 @@
         .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .cell { width: 100px; height: 100px; background-color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 3rem; cursor: pointer; border: 1px solid #333; }
         
-        #simple-ver .board { background-color: #2a3a2a; }
-        #hard-ver .board { background-color: #3a1a2a; }
-        #friend-ver .board { background-color: #1a1a3a; }
+        #simple-ver .board { background-color: #3a1a1a; }
+        #hard-ver .board { background-color: #2a1a3a; }
+        #friend-ver .board { background-color: #1a2a3a; }
         
         .msg-box { margin-top: 20px; font-weight: bold; min-height: 4.5em; max-width: 450px; text-align: center; padding: 15px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); }
         .disclaimer { margin-top: auto; padding: 20px; color: #888; font-size: 0.9rem; text-align: center; width: 100%; border-top: 1px solid #333; }
@@ -122,9 +123,9 @@
         <h1 style="color:var(--accent-friend)">校園的一道光--小黑帽</h1>
         <div class="status-panel">對手：小黑帽 | 程度：
             <select id="diff-f" onchange="resetGame('f')">
-                <option value="easy">簡單 (友善模式)</option>
-                <option value="normal">困難 (一般下法)</option>
-                <option value="top">校排一 (不放水)</option>
+                <option value="easy">簡單</option>
+                <option value="normal">困難</option>
+                <option value="top">校排一</option>
                 <option value="rand">隨便</option>
             </select>
             <div id="turn-f" style="margin-top:10px">輪到：阿簽 (O)</div>
@@ -176,7 +177,6 @@
             g.board[idx] = "O";
             
             let diff = document.getElementById(`diff-${t}`).value;
-            // 熙熙 15 連勝作弊 OR 小恩怨作弊
             if((t === 'h' && diff === 'cheat') || (t === 's' && g.winStreakX >= 15)) {
                 if(checkWin(g.board, "O") && Math.random() > 0.3) g.board[idx] = "";
             }
@@ -209,8 +209,8 @@
             }
             else if (t === 'f') {
                 if (diff === "easy") {
-                    if (g.p1Starts) move = getRand(g.board); // 讓阿簽贏
-                    else move = getSmart(g.board, "O") || getRand(g.board); // 盡量平
+                    if (g.p1Starts) move = getRand(g.board); 
+                    else move = getSmart(g.board, "O") || getRand(g.board); 
                 } else if (diff === "top") move = minimax(g.board, "X").index;
                 else if (diff === "normal") move = getSmart(g.board, "O") || getRand(g.board);
                 else move = getRand(g.board);
@@ -248,13 +248,13 @@
 
         function triggerTotalCount() {
             totalGames++;
-            if (totalGames >= 20 && !friendUnlocked) {
+            // 更新：改為 25 場解鎖
+            if (totalGames >= 25 && !friendUnlocked) {
                 friendUnlocked = true;
-                // 延遲一點點顯示，讓玩家先看完棋局結果
                 setTimeout(() => {
                     document.getElementById('friend-unlock').style.display = 'flex';
                     document.getElementById('tab-f').style.display = 'block';
-                    alert("你沒有錯，不應該受他們的折磨");
+                    alert("你沒有錯，不應該受他們的折磨。小黑帽已經出現來支持你了。");
                 }, 500);
             }
         }
@@ -288,6 +288,13 @@
             state[t].board.forEach((v, i) => {
                 cells[i].innerText = v;
                 cells[i].className = `cell ${v.toLowerCase()}`;
+                // 標記 O/X 顏色以符合主題
+                if(v === "O") cells[i].style.color = "#fff";
+                if(v === "X") {
+                    if(t === 's') cells[i].style.color = "var(--accent-simple)";
+                    if(t === 'h') cells[i].style.color = "var(--accent-hard)";
+                    if(t === 'f') cells[i].style.color = "var(--accent-friend)";
+                }
             });
         }
 
