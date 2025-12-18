@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿簽被校園霸凌情形模擬器--完整版</title>
+    <style>
+        :root {
+            --bg-dark: #0d0d0d;
+            --tab-simple: #1a2a1a;
+            --tab-hard: #2a0a1a;
+            --tab-friend: #1a1a2a;
+            --accent-simple: #00d4ff;
+            --accent-hard: #ff0055;
+            --accent-friend: #00ff88;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding-bottom: 50px;
+        }
+
+        /* 小黑帽支持按鈕 */
+        #friend-unlock {
+            display: none; /* 初始隱藏 */
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 90px;
+            height: 90px;
+            background: #1a1a2a;
+            border: 2px solid var(--accent-friend);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100;
+            color: var(--accent-friend);
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            padding: 10px;
+            box-shadow: 0 0 15px var(--accent-friend);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        #friend-unlock:hover { background: var(--accent-friend); color: #000; transform: scale(1.05); }
+
+        .tab-container { display: flex; width: 100%; max-width: 600px; margin-top: 20px; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; background: #222; border: 1px solid #444; font-weight: bold; }
+        .tab.active-simple { background: var(--tab-simple); border-bottom: 3px solid var(--accent-simple); color: var(--accent-simple); }
+        .tab.active-hard { background: var(--tab-hard); border-bottom: 3px solid var(--accent-hard); color: var(--accent-hard); }
+        .tab.active-friend { background: var(--tab-friend); border-bottom: 3px solid var(--accent-friend); color: var(--accent-friend); }
+
+        .game-content { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
+        .game-content.active { display: flex; }
+
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .cell { width: 100px; height: 100px; background-color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 3rem; cursor: pointer; border: 1px solid #333; }
+        
+        #simple-ver .board { background-color: #2a3a2a; }
+        #hard-ver .board { background-color: #3a1a2a; }
+        #friend-ver .board { background-color: #1a1a3a; }
+        
+        .msg-box { margin-top: 20px; font-weight: bold; min-height: 4.5em; max-width: 450px; text-align: center; padding: 15px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); }
+        .disclaimer { margin-top: auto; padding: 20px; color: #888; font-size: 0.9rem; text-align: center; width: 100%; border-top: 1px solid #333; }
+        select, button { padding: 8px 12px; background: #222; color: #fff; border: 1px solid #555; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="friend-unlock" onclick="switchGame('friend')">小黑帽<br>支持你</div>
+
+    <div class="tab-container">
+        <div id="tab-s" class="tab active-simple" onclick="switchGame('simple')">簡單版 (熙熙)</div>
+        <div id="tab-h" class="tab" onclick="switchGame('hard')">困難版 (小恩怨)</div>
+        <div id="tab-f" class="tab" style="display:none" onclick="switchGame('friend')">友好版 (小黑帽)</div>
+    </div>
+
+    <div id="simple-ver" class="game-content active">
+        <h1 style="color:var(--accent-simple)">阿簽被校園霸凌模擬器--簡單版</h1>
+        <div class="status-panel">對手：熙熙 | 程度：
+            <select id="diff-s" onchange="resetGame('s')">
+                <option value="easy">唐寶 (盡量輸)</option>
+                <option value="normal">一般 (防守)</option>
+                <option value="hard">巔峰 (不可輸)</option>
+                <option value="balance">平衡</option>
+            </select>
+            <div id="turn-s" style="margin-top:10px">輪到：阿簽 (O)</div>
+        </div>
+        <div class="board" id="board-s"></div>
+        <div id="msg-s" class="msg-box"></div>
+        <button onclick="resetGame('s')">重新開始</button>
+    </div>
+
+    <div id="hard-ver" class="game-content">
+        <h1 style="color:var(--accent-hard)">阿簽被校園霸凌模擬器--困難版</h1>
+        <div class="status-panel">對手：小恩怨 | 程度：
+            <select id="diff-h" onchange="resetGame('h')">
+                <option value="easy">靠自己玩</option>
+                <option value="normal">有人協助</option>
+                <option value="cheat">我已受夠</option>
+                <option value="balance">你跟我半斤八兩</option>
+            </select>
+            <div id="turn-h" style="margin-top:10px">輪到：阿簽 (O)</div>
+        </div>
+        <div class="board" id="board-h"></div>
+        <div id="msg-h" class="msg-box"></div>
+        <button onclick="resetGame('h')">重新開始</button>
+    </div>
+
+    <div id="friend-ver" class="game-content">
+        <h1 style="color:var(--accent-friend)">校園的一道光--小黑帽</h1>
+        <div class="status-panel">對手：小黑帽 | 程度：
+            <select id="diff-f" onchange="resetGame('f')">
+                <option value="easy">簡單 (友善模式)</option>
+                <option value="normal">困難 (一般下法)</option>
+                <option value="top">校排一 (不放水)</option>
+                <option value="rand">隨便</option>
+            </select>
+            <div id="turn-f" style="margin-top:10px">輪到：阿簽 (O)</div>
+        </div>
+        <div class="board" id="board-f"></div>
+        <div id="msg-f" class="msg-box"></div>
+        <button onclick="resetGame('f')">重新開始</button>
+    </div>
+
+    <div class="disclaimer"><b>對話內容皆真實發生過，且本人不需付出任何法律責任或懲處</b></div>
+
+    <script>
+        const state = {
+            s: { board: Array(9).fill(""), active: true, p1Starts: true, count: 0, player: "O", winStreakX: 0 },
+            h: { board: Array(9).fill(""), active: true, p1Starts: true, count: 0, player: "O" },
+            f: { board: Array(9).fill(""), active: true, p1Starts: true, count: 0, player: "O" }
+        };
+        let totalGames = 0;
+        let friendUnlocked = false;
+
+        const winMsgs = { s: "阿簽，你打這什麼外掛？準備跟迎旗約談一小時", h: "你太兇了，我要殺了你！你一定下地獄，誰叫你要惹我" };
+        const loseMsgs = { s: "沒有人要理你，沒有人要跟你好，誰叫你打這麼菜", h: "我贏了，所以我可以生氣！你看，阿簽就是很愛亂打小報告" };
+        const drawMsgs = { s: "平手又不是你贏，你是有多厲害", h: "你知道我爸爸是誰嗎？他是本校家長會長！你對本校家長會長的女兒不敬，竟然讓我平手而不是贏，你死定了！" };
+
+        function initBoards() {
+            ['s', 'h', 'f'].forEach(t => {
+                const b = document.getElementById(`board-${t}`);
+                b.innerHTML = '';
+                for(let i=0; i<9; i++) {
+                    let c = document.createElement('div');
+                    c.className = 'cell';
+                    c.onclick = () => makeMove(t, i);
+                    b.appendChild(c);
+                }
+            });
+        }
+
+        function switchGame(type) {
+            document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.className = 'tab');
+            document.getElementById(`${type}-ver`).classList.add('active');
+            const tabCode = type === 'simple' ? 's' : (type === 'hard' ? 'h' : 'f');
+            document.getElementById(`tab-${tabCode}`).classList.add(`active-${type}`);
+        }
+
+        function makeMove(t, idx) {
+            const g = state[t];
+            if (!g.active || g.board[idx] !== "" || g.player !== "O") return;
+            g.board[idx] = "O";
+            
+            let diff = document.getElementById(`diff-${t}`).value;
+            // 熙熙 15 連勝作弊 OR 小恩怨作弊
+            if((t === 'h' && diff === 'cheat') || (t === 's' && g.winStreakX >= 15)) {
+                if(checkWin(g.board, "O") && Math.random() > 0.3) g.board[idx] = "";
+            }
+
+            render(t);
+            if (checkEnd(t, "O")) return;
+            g.player = "X";
+            document.getElementById(`turn-${t}`).innerText = `輪到：${t==='s'?'熙熙':(t==='h'?'小恩怨':'小黑帽')} (X)`;
+            setTimeout(() => aiAction(t), 500);
+        }
+
+        function aiAction(t) {
+            const g = state[t];
+            const diff = document.getElementById(`diff-${t}`).value;
+            let move;
+
+            if (t === 's') {
+                const ignoreMercy = g.winStreakX >= 15;
+                if (diff === "easy") move = getRand(g.board);
+                else if (diff === "hard" || diff === "balance") {
+                    if (!ignoreMercy && (g.count + 1) % 10 === 0) move = getSmart(g.board, "O") || getRand(g.board);
+                    else move = minimax(g.board, "X").index;
+                } else move = getSmart(g.board, "O") || getRand(g.board);
+            } 
+            else if (t === 'h') {
+                if (diff === "cheat") {
+                    if ((g.count + 1) % 10 === 0) move = getSmart(g.board, "O") || getRand(g.board);
+                    else move = minimax(g.board, "X").index;
+                } else move = getSmart(g.board, "O") || getRand(g.board);
+            }
+            else if (t === 'f') {
+                if (diff === "easy") {
+                    if (g.p1Starts) move = getRand(g.board); // 讓阿簽贏
+                    else move = getSmart(g.board, "O") || getRand(g.board); // 盡量平
+                } else if (diff === "top") move = minimax(g.board, "X").index;
+                else if (diff === "normal") move = getSmart(g.board, "O") || getRand(g.board);
+                else move = getRand(g.board);
+            }
+
+            if (move !== undefined) g.board[move] = "X";
+            render(t);
+            checkEnd(t, "X");
+            g.player = "O";
+            document.getElementById(`turn-${t}`).innerText = "輪到：阿簽 (O)";
+        }
+
+        function checkEnd(t, p) {
+            const g = state[t];
+            const msgs = {
+                s: [winMsgs.s, loseMsgs.s, drawMsgs.s],
+                h: [winMsgs.h, loseMsgs.h, drawMsgs.h],
+                f: ["你真的很厲害，絕對可以撐過這段霸凌", "沒關係！我永遠支持你", "我們雙贏"]
+            };
+
+            if (checkWin(g.board, p)) {
+                g.active = false;
+                document.getElementById(`msg-${t}`).innerText = (p === "O") ? msgs[t][0] : msgs[t][1];
+                if(t === 's') { if(p === 'X') g.winStreakX++; else g.winStreakX = 0; }
+                triggerTotalCount(); return true;
+            }
+            if (g.board.every(c => c !== "")) {
+                g.active = false;
+                document.getElementById(`msg-${t}`).innerText = msgs[t][2];
+                if(t === 's') g.winStreakX++;
+                triggerTotalCount(); return true;
+            }
+            return false;
+        }
+
+        function triggerTotalCount() {
+            totalGames++;
+            if (totalGames >= 20 && !friendUnlocked) {
+                friendUnlocked = true;
+                // 延遲一點點顯示，讓玩家先看完棋局結果
+                setTimeout(() => {
+                    document.getElementById('friend-unlock').style.display = 'flex';
+                    document.getElementById('tab-f').style.display = 'block';
+                    alert("你沒有錯，不應該受他們的折磨");
+                }, 500);
+            }
+        }
+
+        function checkWin(b, p) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(c => b[c[0]]===p && b[c[1]]===p && b[c[2]]===p); }
+        function getRand(b) { let a = b.map((v, i) => v === "" ? i : null).filter(v => v !== null); return a[Math.floor(Math.random() * a.length)]; }
+        function getSmart(b, opp) {
+            for (let c of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]) {
+                let v = [b[c[0]], b[c[1]], b[c[2]]];
+                if (v.filter(x => x === opp).length === 2 && v.filter(x => x === "").length === 1) return c[v.indexOf("")];
+            }
+            return null;
+        }
+        function minimax(b, p) {
+            let a = b.map((v,i) => v===""?i:null).filter(v=>v!==null);
+            if (checkWin(b, "O")) return {score: -10};
+            if (checkWin(b, "X")) return {score: 10};
+            if (a.length === 0) return {score: 0};
+            let moves = [];
+            for (let i of a) {
+                b[i] = p;
+                let res = minimax(b, p === "X" ? "O" : "X");
+                moves.push({index: i, score: res.score});
+                b[i] = "";
+            }
+            return p === "X" ? moves.reduce((best, m) => m.score > best.score ? m : best) : moves.reduce((best, m) => m.score < best.score ? m : best);
+        }
+
+        function render(t) {
+            const cells = document.querySelectorAll(`#board-${t} .cell`);
+            state[t].board.forEach((v, i) => {
+                cells[i].innerText = v;
+                cells[i].className = `cell ${v.toLowerCase()}`;
+            });
+        }
+
+        function resetGame(t) {
+            const g = state[t];
+            g.board = Array(9).fill("");
+            g.active = true;
+            g.p1Starts = !g.p1Starts;
+            g.player = g.p1Starts ? "O" : "X";
+            document.getElementById(`msg-${t}`).innerText = "";
+            document.getElementById(`turn-${t}`).innerText = `輪到：${g.player==="O"?'阿簽':(t==='s'?'熙熙':(t==='h'?'小恩怨':'小黑帽'))} (${g.player})`;
+            if (g.player === "X") setTimeout(() => aiAction(t), 500);
+            render(t);
+        }
+
+        initBoards();
+    </script>
+</body>
+</html>
