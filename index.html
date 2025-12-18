@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>阿簽被校園霸凌情形模擬器</title>
+    <title>阿簽被校園霸凌情形模擬器--完整版</title>
     <style>
         :root {
             --bg-dark: #0d0d0d;
@@ -64,6 +64,21 @@
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
+        /* Dev 按鈕 */
+        #dev-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 5px 10px;
+            background: #222;
+            border: 1px solid #444;
+            color: #555;
+            font-size: 0.7rem;
+            cursor: pointer;
+            z-index: 500;
+        }
+        #dev-btn:hover { color: #888; border-color: #666; }
+
         .tab-container { display: flex; width: 100%; max-width: 600px; margin-top: 20px; }
         .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; background: #222; border: 1px solid #444; font-weight: bold; }
         .tab.active-simple { background: #2a0a0a; border-bottom: 3px solid var(--accent-simple); color: var(--accent-simple); }
@@ -88,6 +103,7 @@
 
     <div id="overlay"><div id="overlay-text"></div></div>
 
+    <div id="dev-btn" onclick="devUnlock()">DEV</div>
     <div id="friend-unlock-btn" onclick="enterFriendMode()"></div>
 
     <div id="main-nav" class="tab-container">
@@ -187,6 +203,16 @@
             document.getElementById(`tab-${tabCode}`).classList.add(`active-${type}`);
         }
 
+        function devUnlock() {
+            let pw = prompt("請輸入密碼以解鎖：");
+            if (pw === "antibullying") {
+                totalGames = 15;
+                checkUnlock();
+            } else {
+                alert("密碼錯誤");
+            }
+        }
+
         function enterFriendMode() {
             document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
             document.getElementById('main-nav').style.display = 'none';
@@ -204,10 +230,9 @@
             if (!g.active || g.board[idx] !== "" || g.player !== "O") return;
             
             let diff = document.getElementById(`diff-${t}`).value;
-            // 原版作弊邏輯
             if((t === 'h' && diff === 'cheat') || (t === 's' && g.winStreakX >= 15)) {
                 if(checkWin(g.board, "O") && Math.random() > 0.3) {
-                    // 玩家的落子被「無視」或抹除
+                    // 落子無效邏輯
                 } else {
                     g.board[idx] = "O";
                 }
@@ -282,6 +307,7 @@
                 const btn = document.getElementById('friend-unlock-btn');
                 btn.style.display = 'flex';
                 btn.innerHTML = "你沒有錯<br>不應該受他們的折磨";
+                document.getElementById('dev-btn').style.display = 'none';
             }
         }
 
