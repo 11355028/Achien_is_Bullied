@@ -24,6 +24,7 @@
             overflow: hidden;
         }
 
+        /* 轉場層：初始透明度為0 */
         #transition-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -31,9 +32,10 @@
             z-index: 4000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.6s ease;
         }
 
+        /* 故事開場層 */
         #story-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -47,10 +49,13 @@
             text-align: center;
             line-height: 1.8;
         }
+        #story-title { font-size: 3rem; color: var(--accent-hard); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,0,0,0.5); }
         #story-content { max-width: 800px; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
+        
         .start-btn { padding: 15px 40px; border: 2px solid white; background: none; color: white; cursor: pointer; font-size: 1.2rem; transition: 0.3s; }
         .start-btn:hover { background: white; color: black; }
 
+        /* 全螢幕結算層 */
         #overlay {
             display: none;
             position: fixed;
@@ -65,6 +70,7 @@
         }
         #overlay-text { font-size: 2.2rem; font-weight: bold; line-height: 1.6; }
 
+        /* 盛旦樹支持你 按鈕 */
         #friend-btn {
             display: none; position: fixed; bottom: 30px; right: 30px;
             width: 120px; height: 120px; background: #0a1a2a;
@@ -95,11 +101,12 @@
     <div id="transition-layer"></div>
 
     <div id="story-overlay">
+        <h1 id="story-title">阿簽反霸凌之戰</h1>
         <div id="story-content">
             2024年9月，一個患有亞斯伯格症及 ADHD 的特教生阿簽進入了【名竹國中】。<br>
             起初一切順利，直到【希悉郝謗】因嫉妒而聯合【曉恩苑】發起霸凌。<br><br>
-            他們向你宣戰，要打井字棋。但是，卻賭注是你的【情緒控管】。<br>
-            你必須保持冷静。崩潰就是輸掉比賽，代價就是死亡。<br>
+            他們向你宣戰，要打井字棋，但輸贏條件卻是【情緒控管】。<br>
+            只要你崩潰，沒人幫你，你就輸了，而輸掉的代價就是---死亡。<br>
             阿簽，你能活下來嗎？
         </div>
         <button class="start-btn" onclick="startGame()">接受挑戰 (進入全螢幕)</button>
@@ -145,8 +152,11 @@
 
         function startGame() {
             const docEl = document.documentElement;
-            if (docEl.requestFullscreen) docEl.requestFullscreen();
+            if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+            
+            // 先隱藏故事層
             document.getElementById('story-overlay').style.display = 'none';
+            // 直接顯示第一關
             switchView('normal');
         }
 
@@ -158,13 +168,16 @@
 
         function switchView(type) {
             const layer = document.getElementById('transition-layer');
-            layer.style.opacity = "1";
+            layer.style.opacity = "1"; // 黑幕升起
+            
             setTimeout(() => {
+                // 隱藏所有遊戲區塊
                 document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
+                // 顯示目標區塊
                 document.getElementById(`${type}-ver`).classList.add('active');
                 initBoard(type);
-                layer.style.opacity = "0";
-            }, 800);
+                layer.style.opacity = "0"; // 黑幕落下
+            }, 600);
         }
 
         function initBoard(t) {
@@ -179,6 +192,7 @@
                 c.onclick = () => makeMove(t, i);
                 b.appendChild(c);
             }
+            document.getElementById(`turn-${t}`).innerText = "輪到：阿簽 (O)";
         }
 
         function makeMove(t, idx) {
@@ -227,23 +241,23 @@
             setTimeout(() => {
                 ov.style.display = 'none';
                 checkProgression(t);
-            }, 5000);
+            }, 4000);
         }
 
         function checkProgression(t) {
-            // 第一階段完成：20場
+            // 第一階段 20 場
             if (t === 'n' && state.n.count === 20) {
                 document.getElementById('friend-btn').style.display = 'flex';
                 initBoard('n');
             } 
-            // 第二階段完成：30場
+            // 第二階段 30 場
             else if (t === 'f' && state.f.count === 30) {
                 alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！怕輸是不是？」");
                 document.getElementById('friend-btn').onclick = null;
                 document.getElementById('friend-btn').style.cursor = "default";
                 switchView('hard');
             }
-            // 第三階段完成：40場
+            // 第三階段 40 場
             else if (t === 'h' && state.h.count === 40) {
                 finalEnd();
             } else {
@@ -253,19 +267,27 @@
 
         function finalEnd() {
             const ot = document.getElementById('overlay-text');
-            ot.innerHTML = "「不是你怎麼都不生氣了？」<br>「好啦你贏了啦」<br><br><span style='color:white'>【希悉郝謗】已死亡</span><br>恭喜獲勝";
+            ot.innerHTML = "「不是你怎麼都不生氣了？」<br>「好啦你贏了啦」<br><br><span style='color:white; font-size:1.5rem;'>【希悉郝謗】已死亡</span><br><br><span style='color:gold'>恭喜獲勝，你守護了自己的生命。</span>";
             document.getElementById('overlay').style.display = 'flex';
             document.getElementById('replay-btn').style.display = 'block';
-            if (document.exitFullscreen) document.exitFullscreen();
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         }
 
-        function enterFriendMode() { switchView('f'); }
+        function enterFriendMode() { 
+            if (state.n.count >= 20) switchView('f'); 
+        }
+
         function render(t) {
             const cells = document.querySelectorAll(`#board-${t} .cell`);
-            state[t].board.forEach((v, i) => { cells[i].innerText = v; cells[i].style.color = (v==='X'?'#ff4d4d':'#fff'); });
+            state[t].board.forEach((v, i) => { 
+                cells[i].innerText = v; 
+                cells[i].style.color = (v==='X'?'var(--accent-hard)':'#fff'); 
+            });
         }
 
-        function checkWin(b, p) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(c => b[c[0]]===p && b[c[1]]===p && b[c[2]]===p); }
+        function checkWin(b, p) { 
+            return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(c => b[c[0]]===p && b[c[1]]===p && b[c[2]]===p); 
+        }
 
         function minimax(b, p) {
             let avail = b.map((v, i) => v === "" ? i : null).filter(v => v !== null);
