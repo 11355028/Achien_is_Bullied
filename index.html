@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>阿簽被校園霸凌情形模擬器--完整版</title>
+    <title>阿簽反霸凌之戰</title>
     <style>
         :root {
-            --bg-dark: #0d0d0d;
-            --accent-simple: #ff4d4d;
-            --accent-hard: #bf55ff;
-            --accent-friend: #00a2ff;
+            --bg-dark: #050505;
+            --accent-normal: #bf55ff; /* 曉恩苑 */
+            --accent-hard: #ff4d4d;   /* 希悉郝謗 */
+            --accent-friend: #00a2ff; /* 盛旦數 */
         }
 
         body {
@@ -21,245 +21,180 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        /* 全螢幕結算層 */
+        #transition-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 4000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        #story-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            line-height: 1.8;
+        }
+        #story-content { max-width: 800px; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
+        .start-btn { padding: 15px 40px; border: 2px solid white; background: none; color: white; cursor: pointer; font-size: 1.2rem; transition: 0.3s; }
+        .start-btn:hover { background: white; color: black; }
+
         #overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.98);
-            z-index: 2000;
+            z-index: 3000;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 40px;
+            padding: 20px;
         }
         #overlay-text { font-size: 2.2rem; font-weight: bold; line-height: 1.6; }
 
-        /* 小黑帽獨立按鈕 */
-        #friend-unlock-btn {
-            display: none; 
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 120px;
-            height: 120px;
-            background: #0a1a2a;
-            border: 3px solid var(--accent-friend);
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 1000;
-            color: var(--accent-friend);
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 0 25px var(--accent-friend);
-            transition: all 0.3s;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            animation: pulse 2s infinite;
+        #friend-btn {
+            display: none; position: fixed; bottom: 30px; right: 30px;
+            width: 120px; height: 120px; background: #0a1a2a;
+            border: 3px solid var(--accent-friend); border-radius: 50%;
+            cursor: pointer; z-index: 1000; color: var(--accent-friend);
+            font-weight: bold; text-align: center; box-shadow: 0 0 20px var(--accent-friend);
+            align-items: center; justify-content: center; animation: pulse 2s infinite;
+            padding: 10px; box-sizing: border-box; font-size: 0.95rem;
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* Dev 按鈕 */
-        #dev-btn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            padding: 5px 10px;
-            background: #222;
-            border: 1px solid #444;
-            color: #555;
-            font-size: 0.7rem;
-            cursor: pointer;
-            z-index: 500;
-        }
-        #dev-btn:hover { color: #888; border-color: #666; }
-
-        .tab-container { display: flex; width: 100%; max-width: 600px; margin-top: 20px; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; background: #222; border: 1px solid #444; font-weight: bold; }
-        .tab.active-simple { background: #2a0a0a; border-bottom: 3px solid var(--accent-simple); color: var(--accent-simple); }
-        .tab.active-hard { background: #1a0a2a; border-bottom: 3px solid var(--accent-hard); color: var(--accent-hard); }
-
-        .game-content { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px; margin-top: 20px; }
+        .game-content { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px; margin-top: 50px; }
         .game-content.active { display: flex; }
 
         .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .cell { width: 100px; height: 100px; background-color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; cursor: pointer; border: 1px solid #333; }
         
-        #simple-ver .board { background-color: #3a1a1a; }
-        #hard-ver .board { background-color: #2a1a3a; }
+        #normal-ver .board { background-color: #1a0a2a; }
+        #hard-ver .board { background-color: #2a0a0a; }
         #friend-ver .board { background-color: #1a2a3a; }
 
-        .status-panel { text-align: center; font-size: 1.1rem; line-height: 1.8; }
-        .disclaimer { margin-top: auto; padding: 20px; color: #555; font-size: 0.9rem; text-align: center; width: 100%; border-top: 1px solid #333; }
-        select { padding: 5px; background: #222; color: #fff; border: 1px solid #444; margin-bottom: 10px; }
+        .status-panel { text-align: center; font-size: 1.2rem; }
+        #replay-btn { display: none; padding: 10px 20px; background: white; color: black; border: none; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
-<body>
+<body onclick="checkFullScreen()">
 
-    <div id="overlay"><div id="overlay-text"></div></div>
+    <div id="transition-layer"></div>
 
-    <div id="dev-btn" onclick="devUnlock()">DEV</div>
-    <div id="friend-unlock-btn" onclick="enterFriendMode()"></div>
-
-    <div id="main-nav" class="tab-container">
-        <div id="tab-s" class="tab active-simple" onclick="switchGame('simple')">簡單版 (熙熙)</div>
-        <div id="tab-h" class="tab" onclick="switchGame('hard')">困難版 (小恩怨)</div>
+    <div id="story-overlay">
+        <div id="story-content">
+            2024年9月，一個患有亞斯伯格症及 ADHD 的特教生阿簽進入了【名竹國中】。<br>
+            起初一切順利，直到【希悉郝謗】因嫉妒而聯合【曉恩苑】發起霸凌。<br><br>
+            他們向你宣戰，要打井字棋。但是，卻賭注是你的【情緒控管】。<br>
+            你必須保持冷静。崩潰就是輸掉比賽，代價就是死亡。<br>
+            阿簽，你能活下來嗎？
+        </div>
+        <button class="start-btn" onclick="startGame()">接受挑戰 (進入全螢幕)</button>
     </div>
 
-    <div id="simple-ver" class="game-content active">
-        <h1 style="color:var(--accent-simple)">阿簽被校園霸凌模擬器--簡單版</h1>
-        <div class="status-panel">
-            對手：熙熙 | 程度：
-            <select id="diff-s" onchange="resetGame('s')">
-                <option value="easy">唐寶</option>
-                <option value="normal">一般</option>
-                <option value="hard" selected>巔峰</option>
-                <option value="balance">平衡</option>
-            </select>
-            <div id="turn-s">輪到：阿簽 (O)</div>
-        </div>
-        <div class="board" id="board-s"></div>
+    <div id="overlay">
+        <div id="overlay-text"></div>
+        <button id="replay-btn" onclick="location.reload()">重新遊玩</button>
+    </div>
+
+    <div id="friend-btn" onclick="enterFriendMode()">盛旦樹<br>支持你</div>
+
+    <div id="normal-ver" class="game-content">
+        <h1 style="color:var(--accent-normal)">情緒生死戰：初階 (曉恩苑)</h1>
+        <div class="status-panel"><div id="turn-n">輪到：阿簽 (O)</div></div>
+        <div class="board" id="board-n"></div>
     </div>
 
     <div id="hard-ver" class="game-content">
-        <h1 style="color:var(--accent-hard)">阿簽被校園霸凌模擬器--困難版</h1>
-        <div class="status-panel">
-            對手：小恩怨 | 程度：
-            <select id="diff-h" onchange="resetGame('h')">
-                <option value="easy">靠自己玩</option>
-                <option value="normal">有人協助</option>
-                <option value="cheat" selected>我已受夠</option>
-                <option value="balance">你跟我半斤八兩</option>
-            </select>
-            <div id="turn-h">輪到：阿簽 (O)</div>
-        </div>
+        <h1 style="color:var(--accent-hard)">情緒生死戰：進階 (希悉郝謗)</h1>
+        <div class="status-panel"><div id="turn-h">輪到：阿簽 (O)</div></div>
         <div class="board" id="board-h"></div>
     </div>
 
     <div id="friend-ver" class="game-content">
-        <button onclick="exitFriendMode()" style="align-self: flex-start; background:none; border:1px solid #444; color:#888; cursor:pointer;">← 返回</button>
-        <h1 style="color:var(--accent-friend)">校園的一道光--小黑帽</h1>
-        <div class="status-panel">
-            對手：小黑帽 | 程度：
-            <select id="diff-f" onchange="resetGame('f')">
-                <option value="easy">簡單</option>
-                <option value="normal">困難</option>
-                <option value="top" selected>校排一</option>
-                <option value="rand">隨便</option>
-            </select>
-            <div id="turn-f">輪到：阿簽 (O)</div>
-        </div>
+        <h1 style="color:var(--accent-friend)">最後的溫暖：盛旦數</h1>
+        <div class="status-panel"><div id="turn-f">輪到：阿簽 (O)</div></div>
         <div class="board" id="board-f"></div>
     </div>
 
-    <div class="disclaimer"><b>對話內容皆真實發生過，且本人不需付出任何法律責任或懲處</b></div>
-
     <script>
         const state = {
-            s: { board: Array(9).fill(""), active: true, p1Starts: true, player: "O", winStreakX: 0 },
-            h: { board: Array(9).fill(""), active: true, p1Starts: true, player: "O" },
-            f: { board: Array(9).fill(""), active: true, p1Starts: true, player: "O" }
+            n: { board: Array(9).fill(""), active: true, player: "O", count: 0 },
+            h: { board: Array(9).fill(""), active: true, player: "O", count: 0 },
+            f: { board: Array(9).fill(""), active: true, player: "O", count: 0 }
         };
-        let totalGames = 0;
-        let friendUnlocked = false;
 
-        const winMsgs = { 
-            s: "阿簽，你打這什麼外掛？準備跟迎旗約談一小時", 
-            h: "你太兇了，我要殺了你！你一定下地獄，誰叫你要惹我" 
+        const msgs = {
+            n: { win: "你太兇了，我要殺了你！你一定下地獄，誰叫你要惹我", lose: "我贏了，所以我可以生氣！你看，阿簽就是很愛亂打小報告", draw: "你知道我爸爸是誰嗎？他是本校家長會長！竟然讓我平手，你死定了！" },
+            h: { win: "阿簽，你打這什麼外掛？準備跟迎旗約談一小時", lose: "沒有人要理你，沒有人要跟你好，誰叫你打這麼菜", draw: "平手又不是你贏，你是有多厲害" },
+            f: { win: "你真的很厲害，絕對可以撐過這段霸凌", lose: "沒關係！我永遠支持你", draw: "我們雙贏，這就是最好的結局" }
         };
-        const loseMsgs = { 
-            s: "沒有人要理你，沒有人要跟你好，誰叫你打這麼菜", 
-            h: "我贏了，所以我可以生氣！你看，阿簽就是很愛亂打小報告" 
-        };
-        const drawMsgs = { 
-            s: "平手又不是你贏，你是有多厲害", 
-            h: "你知道我爸爸是誰嗎？他是本校家長會長！你對本校家長會長的女兒不敬，竟然讓我平手而不是贏，你死定了！" 
-        };
-        const friendMsgs = ["你真的很厲害，絕對可以撐過這段霸凌", "沒關係！我永遠支持你", "我們雙贏"];
 
-        function initBoards() {
-            ['s', 'h', 'f'].forEach(t => {
-                const b = document.getElementById(`board-${t}`);
-                b.innerHTML = '';
-                for(let i=0; i<9; i++) {
-                    let c = document.createElement('div');
-                    c.className = 'cell';
-                    c.onclick = () => makeMove(t, i);
-                    b.appendChild(c);
-                }
-            });
+        function startGame() {
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) docEl.requestFullscreen();
+            document.getElementById('story-overlay').style.display = 'none';
+            switchView('normal');
         }
 
-        function switchGame(type) {
-            document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(el => el.className = 'tab');
-            document.getElementById(`${type}-ver`).classList.add('active');
-            const tabCode = type === 'simple' ? 's' : 'h';
-            document.getElementById(`tab-${tabCode}`).classList.add(`active-${type}`);
-        }
-
-        function devUnlock() {
-            let pw = prompt("請輸入密碼以解鎖：");
-            if (pw === "antibullying") {
-                totalGames = 15;
-                checkUnlock();
-            } else {
-                alert("密碼錯誤");
+        function checkFullScreen() {
+            if (!document.fullscreenElement && document.getElementById('story-overlay').style.display === 'none') {
+                document.documentElement.requestFullscreen().catch(() => {});
             }
         }
 
-        function enterFriendMode() {
-            document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('main-nav').style.display = 'none';
-            document.getElementById('friend-ver').classList.add('active');
-            resetGame('f');
+        function switchView(type) {
+            const layer = document.getElementById('transition-layer');
+            layer.style.opacity = "1";
+            setTimeout(() => {
+                document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
+                document.getElementById(`${type}-ver`).classList.add('active');
+                initBoard(type);
+                layer.style.opacity = "0";
+            }, 800);
         }
 
-        function exitFriendMode() {
-            document.getElementById('main-nav').style.display = 'flex';
-            switchGame('simple');
+        function initBoard(t) {
+            const b = document.getElementById(`board-${t}`);
+            b.innerHTML = '';
+            state[t].board = Array(9).fill("");
+            state[t].active = true;
+            state[t].player = "O";
+            for(let i=0; i<9; i++) {
+                let c = document.createElement('div');
+                c.className = 'cell';
+                c.onclick = () => makeMove(t, i);
+                b.appendChild(c);
+            }
         }
 
         function makeMove(t, idx) {
             const g = state[t];
             if (!g.active || g.board[idx] !== "" || g.player !== "O") return;
-            
-            let diff = document.getElementById(`diff-${t}`).value;
-            if((t === 'h' && diff === 'cheat') || (t === 's' && g.winStreakX >= 15)) {
-                if(checkWin(g.board, "O") && Math.random() > 0.3) {
-                    // 落子無效邏輯
-                } else {
-                    g.board[idx] = "O";
-                }
-            } else {
-                g.board[idx] = "O";
-            }
-            
+            g.board[idx] = "O";
             render(t);
             if (checkEnd(t, "O")) return;
             g.player = "X";
-            document.getElementById(`turn-${t}`).innerText = `輪到：${t==='s'?'熙熙':(t==='h'?'小恩怨':'小黑帽')} (X)`;
+            document.getElementById(`turn-${t}`).innerText = "輪到：對手 (X)";
             setTimeout(() => aiAction(t), 500);
         }
 
         function aiAction(t) {
             const g = state[t];
-            const diff = document.getElementById(`diff-${t}`).value;
-            let move;
-
-            if (diff === "hard" || diff === "cheat" || diff === "top") {
-                move = minimax(g.board, "X").index;
-            } else if (diff === "easy") {
-                move = getRand(g.board);
-            } else {
-                move = getSmart(g.board, "O") || getRand(g.board);
-            }
-
+            let move = minimax(g.board, "X").index;
             if (move !== undefined) g.board[move] = "X";
             render(t);
             if (checkEnd(t, "X")) return;
@@ -269,94 +204,83 @@
 
         function checkEnd(t, p) {
             const g = state[t];
-            let msg = "";
-            if (checkWin(g.board, p)) {
-                if (t === 'f') msg = (p === "O" ? friendMsgs[0] : friendMsgs[1]);
-                else msg = (p === "O" ? winMsgs[t] : loseMsgs[t]);
-                if(t === 's') { if(p === 'X') g.winStreakX++; else g.winStreakX = 0; }
-            } else if (g.board.every(c => c !== "")) {
-                msg = (t === 'f' ? friendMsgs[2] : drawMsgs[t]);
-                if(t === 's') g.winStreakX++;
-            }
+            let res = "";
+            if (checkWin(g.board, p)) res = (p === "O" ? "win" : "lose");
+            else if (g.board.every(c => c !== "")) res = "draw";
 
-            if (msg !== "") {
+            if (res) {
                 g.active = false;
-                totalGames++;
-                showOverlay(msg, t);
-                checkUnlock();
+                g.count++;
+                showOverlay(msgs[t][res], t);
                 return true;
             }
             return false;
         }
 
-        function showOverlay(text, t) {
+        function showOverlay(txt, t) {
             const ov = document.getElementById('overlay');
             const ot = document.getElementById('overlay-text');
-            ot.innerText = text;
-            ot.style.color = t === 's' ? 'var(--accent-simple)' : (t === 'h' ? 'var(--accent-hard)' : 'var(--accent-friend)');
+            ot.innerText = txt;
+            ot.style.color = (t === 'n' ? 'var(--accent-normal)' : (t === 'h' ? 'var(--accent-hard)' : 'var(--accent-friend)'));
             ov.style.display = 'flex';
+
             setTimeout(() => {
                 ov.style.display = 'none';
-                resetGame(t);
+                checkProgression(t);
             }, 5000);
         }
 
-        function checkUnlock() {
-            if (totalGames >= 15 && !friendUnlocked) {
-                friendUnlocked = true;
-                const btn = document.getElementById('friend-unlock-btn');
-                btn.style.display = 'flex';
-                btn.innerHTML = "你沒有錯<br>不應該受他們的折磨";
-                document.getElementById('dev-btn').style.display = 'none';
+        function checkProgression(t) {
+            // 第一階段完成：20場
+            if (t === 'n' && state.n.count === 20) {
+                document.getElementById('friend-btn').style.display = 'flex';
+                initBoard('n');
+            } 
+            // 第二階段完成：30場
+            else if (t === 'f' && state.f.count === 30) {
+                alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！怕輸是不是？」");
+                document.getElementById('friend-btn').onclick = null;
+                document.getElementById('friend-btn').style.cursor = "default";
+                switchView('hard');
             }
+            // 第三階段完成：40場
+            else if (t === 'h' && state.h.count === 40) {
+                finalEnd();
+            } else {
+                initBoard(t);
+            }
+        }
+
+        function finalEnd() {
+            const ot = document.getElementById('overlay-text');
+            ot.innerHTML = "「不是你怎麼都不生氣了？」<br>「好啦你贏了啦」<br><br><span style='color:white'>【希悉郝謗】已死亡</span><br>恭喜獲勝";
+            document.getElementById('overlay').style.display = 'flex';
+            document.getElementById('replay-btn').style.display = 'block';
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+
+        function enterFriendMode() { switchView('f'); }
+        function render(t) {
+            const cells = document.querySelectorAll(`#board-${t} .cell`);
+            state[t].board.forEach((v, i) => { cells[i].innerText = v; cells[i].style.color = (v==='X'?'#ff4d4d':'#fff'); });
         }
 
         function checkWin(b, p) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(c => b[c[0]]===p && b[c[1]]===p && b[c[2]]===p); }
-        function getRand(b) { let a = b.map((v, i) => v === "" ? i : null).filter(v => v !== null); return a[Math.floor(Math.random() * a.length)]; }
-        function getSmart(b, opp) {
-            for (let c of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]) {
-                let v = [b[c[0]], b[c[1]], b[c[2]]];
-                if (v.filter(x => x === opp).length === 2 && v.filter(x => x === "").length === 1) return c[v.indexOf("")];
-            }
-            return null;
-        }
 
         function minimax(b, p) {
-            let a = b.map((v,i) => v===""?i:null).filter(v=>v!==null);
-            if (checkWin(b, "O")) return {score: -10};
-            if (checkWin(b, "X")) return {score: 10};
-            if (a.length === 0) return {score: 0};
+            let avail = b.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if (checkWin(b, "O")) return { score: -10 };
+            if (checkWin(b, "X")) return { score: 10 };
+            if (avail.length === 0) return { score: 0 };
             let moves = [];
-            for (let i of a) {
+            for (let i of avail) {
                 b[i] = p;
                 let res = minimax(b, p === "X" ? "O" : "X");
-                moves.push({index: i, score: res.score});
+                moves.push({ index: i, score: res.score });
                 b[i] = "";
             }
-            return p === "X" ? moves.reduce((best, m) => m.score > best.score ? m : best) : moves.reduce((best, m) => m.score < best.score ? m : best);
+            return p === "X" ? moves.reduce((a, b) => a.score > b.score ? a : b) : moves.reduce((a, b) => a.score < b.score ? a : b);
         }
-
-        function render(t) {
-            const cells = document.querySelectorAll(`#board-${t} .cell`);
-            state[t].board.forEach((v, i) => {
-                cells[i].innerText = v;
-                if(v === "X") cells[i].style.color = t === 's' ? 'var(--accent-simple)' : (t === 'h' ? 'var(--accent-hard)' : 'var(--accent-friend)');
-                else cells[i].style.color = "#fff";
-            });
-        }
-
-        function resetGame(t) {
-            const g = state[t];
-            g.board = Array(9).fill("");
-            g.active = true;
-            g.p1Starts = !g.p1Starts;
-            g.player = g.p1Starts ? "O" : "X";
-            document.getElementById(`turn-${t}`).innerText = `輪到：${g.player==="O"?'阿簽':(t==='s'?'熙熙':(t==='h'?'小恩怨':'小黑帽'))} (${g.player})`;
-            if (g.player === "X") setTimeout(() => aiAction(t), 500);
-            render(t);
-        }
-
-        initBoards();
     </script>
 </body>
 </html>
