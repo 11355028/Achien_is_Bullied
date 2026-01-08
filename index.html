@@ -15,28 +15,18 @@
         body, html {
             background-color: var(--bg-dark);
             color: #e0e0e0;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             font-family: 'Microsoft JhengHei', sans-serif;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: flex; flex-direction: column; align-items: center;
         }
 
         #story-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
         }
 
         #story-title { font-size: 3rem; color: var(--accent-hard); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,0,0,0.5); }
@@ -49,11 +39,7 @@
         .start-btn:hover { background: white; color: black; }
 
         .game-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 50px;
+            width: 100%; display: flex; flex-direction: column; align-items: center; padding-top: 50px;
         }
 
         .game-content { display: none; flex-direction: column; align-items: center; }
@@ -104,17 +90,17 @@
 
     <div class="game-container">
         <div id="normal-ver" class="game-content">
-            <h1 style="color:var(--accent-normal)">情緒生死戰：第一階段 (曉恩苑)</h1>
+            <h1 style="color:var(--accent-normal)">第一階段：曉恩苑</h1>
             <div id="turn-n">輪到：阿簽 (O)</div>
             <div class="board" id="board-n"></div>
         </div>
         <div id="hard-ver" class="game-content">
-            <h1 style="color:var(--accent-hard)">情緒生死戰：最終階段 (希悉郝謗)</h1>
+            <h1 style="color:var(--accent-hard)">最終階段：希悉郝謗</h1>
             <div id="turn-h">輪到：阿簽 (O)</div>
             <div class="board" id="board-h"></div>
         </div>
         <div id="friend-ver" class="game-content">
-            <h1 style="color:var(--accent-friend)">最後的溫暖：盛旦數</h1>
+            <h1 style="color:var(--accent-friend)">盛旦數的支持</h1>
             <div id="turn-f">輪到：阿簽 (O)</div>
             <div class="board" id="board-f"></div>
         </div>
@@ -187,14 +173,12 @@
             setTimeout(() => {
                 let move;
                 if (t === 'f') {
-                    // 盛旦數：5場最強, 1場普通 (第6, 12, 18...)
                     if (state.f.count % 6 === 5) {
                         move = getNormalMove(state.f.board);
                     } else {
                         move = minimax(state.f.board, "X").index;
                     }
                 } else {
-                    // 其他人：普通模式
                     move = getNormalMove(state[t].board);
                 }
                 
@@ -204,7 +188,7 @@
                     state.locked = false;
                     document.getElementById(`turn-${t}`).innerText = "輪到：阿簽 (O)";
                 }
-            }, 600);
+            }, 500);
         }
 
         function updateUI(t) {
@@ -236,7 +220,7 @@
             setTimeout(() => {
                 ov.style.display = 'none';
                 handleProgress(t);
-            }, 3000);
+            }, 2500);
         }
 
         function handleProgress(t) {
@@ -244,8 +228,8 @@
                 document.getElementById('friend-btn').style.display = 'flex';
                 initBoard('n');
             } else if (t === 'f' && state.f.count === 30) {
-                alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！怕輸是不是？」");
-                document.getElementById('friend-btn').onclick = null;
+                alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！」");
+                document.getElementById('friend-btn').style.display = 'none';
                 showSection('h');
             } else if (t === 'h' && state.h.count === 40) {
                 document.getElementById('overlay-text').innerHTML = 
@@ -264,72 +248,47 @@
             return lines.some(l => l.every(i => b[i] === p));
         }
 
-        // --- AI 算法部分 ---
-
-        // 一般人模式：尋找致勝點或阻擋，否則優先佔中或隨機
         function getNormalMove(board) {
             const avail = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            
-            // 1. 檢查自己能否贏
+            if (Math.random() < 0.3) return avail[Math.floor(Math.random() * avail.length)];
             for (let i of avail) {
                 board[i] = "X";
                 if (checkWin(board, "X")) { board[i] = ""; return i; }
                 board[i] = "";
             }
-            
-            // 2. 檢查是否需要阻擋玩家
             for (let i of avail) {
                 board[i] = "O";
                 if (checkWin(board, "O")) { board[i] = ""; return i; }
                 board[i] = "";
             }
-            
-            // 3. 佔據中心
             if (board[4] === "") return 4;
-            
-            // 4. 隨機下
             return avail[Math.floor(Math.random() * avail.length)];
         }
 
-        // 最強 AI 演算法 (Minimax)
         function minimax(newBoard, player) {
             let availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
             if (checkWin(newBoard, "O")) return { score: -10 };
             if (checkWin(newBoard, "X")) return { score: 10 };
             if (availSpots.length === 0) return { score: 0 };
-
             let moves = [];
             for (let i = 0; i < availSpots.length; i++) {
-                let move = {};
-                move.index = availSpots[i];
+                let move = { index: availSpots[i] };
                 newBoard[availSpots[i]] = player;
-                if (player === "X") {
-                    let result = minimax(newBoard, "O");
-                    move.score = result.score;
-                } else {
-                    let result = minimax(newBoard, "X");
-                    move.score = result.score;
-                }
+                let result = (player === "X") ? minimax(newBoard, "O") : minimax(newBoard, "X");
+                move.score = result.score;
                 newBoard[availSpots[i]] = "";
                 moves.push(move);
             }
-
             let bestMove;
             if (player === "X") {
                 let bestScore = -10000;
                 for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score > bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
+                    if (moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; }
                 }
             } else {
                 let bestScore = 10000;
                 for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score < bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
+                    if (moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; }
                 }
             }
             return moves[bestMove];
