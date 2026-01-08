@@ -71,10 +71,22 @@
             font-weight: bold; align-items: center; justify-content: center;
             text-align: center; font-size: 0.9rem; animation: pulse 2s infinite;
         }
+
+        /* Dev 按鈕樣式 */
+        #dev-btn {
+            position: fixed; bottom: 10px; left: 10px;
+            padding: 5px 10px; background: rgba(255, 255, 255, 0.1);
+            color: #555; font-size: 0.7rem; border: none; cursor: pointer;
+            z-index: 10001; border-radius: 3px;
+        }
+        #dev-btn:hover { background: rgba(255, 255, 255, 0.2); color: #888; }
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body onclick="checkFullScreen()">
+
+    <button id="dev-btn" onclick="devSkip()">Dev</button>
 
     <div id="story-overlay">
         <h1 id="story-title">阿簽反霸凌之戰</h1>
@@ -132,6 +144,17 @@
             document.getElementById('story-overlay').style.display = 'none';
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
             showSection('n');
+        }
+
+        function devSkip() {
+            const pw = prompt("請輸入開發者密碼：");
+            if (pw === "27322935") {
+                const targets = { n: 20, f: 30, h: 40 };
+                state[state.current].count = targets[state.current];
+                handleProgress(state.current);
+            } else {
+                alert("密碼錯誤");
+            }
         }
 
         function checkFullScreen() {
@@ -224,14 +247,14 @@
         }
 
         function handleProgress(t) {
-            if (t === 'n' && state.n.count === 20) {
+            if (t === 'n' && state.n.count >= 20) {
                 document.getElementById('friend-btn').style.display = 'flex';
                 initBoard('n');
-            } else if (t === 'f' && state.f.count === 30) {
+            } else if (t === 'f' && state.f.count >= 30) {
                 alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！」");
                 document.getElementById('friend-btn').style.display = 'none';
                 showSection('h');
-            } else if (t === 'h' && state.h.count === 40) {
+            } else if (t === 'h' && state.h.count >= 40) {
                 document.getElementById('overlay-text').innerHTML = 
                     "「不是你怎麼都不生氣了？」<br>「好啦你贏了啦」<br><br><span style='color:white'>【希悉郝謗】已死亡</span><br>恭喜獲勝！";
                 document.getElementById('overlay').style.display = 'flex';
