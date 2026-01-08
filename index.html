@@ -185,8 +185,20 @@
             state.locked = true;
             document.getElementById(`turn-${t}`).innerText = "對手思考中...";
             setTimeout(() => {
-                let move = minimax(state[t].board, "X").index;
-                if (move !== undefined) state[t].board[move] = "X";
+                let move;
+                if (t === 'f') {
+                    // 盛旦數：5場最強, 1場普通 (第6, 12, 18...)
+                    if (state.f.count % 6 === 5) {
+                        move = getNormalMove(state.f.board);
+                    } else {
+                        move = minimax(state.f.board, "X").index;
+                    }
+                } else {
+                    // 其他人：普通模式
+                    move = getNormalMove(state[t].board);
+                }
+                
+                if (move !== undefined && move !== null) state[t].board[move] = "X";
                 updateUI(t);
                 if (!checkEnd(t, "X")) {
                     state.locked = false;
@@ -252,7 +264,34 @@
             return lines.some(l => l.every(i => b[i] === p));
         }
 
-        // 最強 AI 演算法
+        // --- AI 算法部分 ---
+
+        // 一般人模式：尋找致勝點或阻擋，否則優先佔中或隨機
+        function getNormalMove(board) {
+            const avail = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            
+            // 1. 檢查自己能否贏
+            for (let i of avail) {
+                board[i] = "X";
+                if (checkWin(board, "X")) { board[i] = ""; return i; }
+                board[i] = "";
+            }
+            
+            // 2. 檢查是否需要阻擋玩家
+            for (let i of avail) {
+                board[i] = "O";
+                if (checkWin(board, "O")) { board[i] = ""; return i; }
+                board[i] = "";
+            }
+            
+            // 3. 佔據中心
+            if (board[4] === "") return 4;
+            
+            // 4. 隨機下
+            return avail[Math.floor(Math.random() * avail.length)];
+        }
+
+        // 最強 AI 演算法 (Minimax)
         function minimax(newBoard, player) {
             let availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
             if (checkWin(newBoard, "O")) return { score: -10 };
