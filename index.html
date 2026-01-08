@@ -26,7 +26,6 @@
             align-items: center;
         }
 
-        /* 故事開場層 - 最優先顯示 */
         #story-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -38,7 +37,6 @@
             align-items: center;
             text-align: center;
             padding: 20px;
-            box-sizing: border-box;
         }
 
         #story-title { font-size: 3rem; color: var(--accent-hard); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,0,0,0.5); }
@@ -46,22 +44,10 @@
         
         .start-btn { 
             padding: 15px 40px; border: 2px solid white; background: none; color: white; 
-            cursor: pointer; font-size: 1.2rem; transition: 0.3s; z-index: 10000;
+            cursor: pointer; font-size: 1.2rem; transition: 0.3s;
         }
         .start-btn:hover { background: white; color: black; }
 
-        /* 轉場用黑幕 */
-        #transition-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            z-index: 8000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        /* 遊戲主容器 */
         .game-container {
             width: 100%;
             display: flex;
@@ -76,19 +62,14 @@
         .board { 
             display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); 
             gap: 10px; padding: 15px; border-radius: 8px; margin-top: 20px; 
-            border: 2px solid #333;
+            background: #111; border: 2px solid #333;
         }
         .cell { 
             width: 100px; height: 100px; background-color: #1a1a1a; 
             display: flex; align-items: center; justify-content: center; 
             font-size: 3.5rem; cursor: pointer; border: 1px solid #333; 
         }
-        
-        #normal-ver .board { border-color: var(--accent-normal); }
-        #hard-ver .board { border-color: var(--accent-hard); }
-        #friend-ver .board { border-color: var(--accent-friend); }
 
-        /* 結算畫面 */
         #overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 9000;
@@ -114,14 +95,12 @@
         <div id="story-content">
             2024年9月，一個患有亞斯伯格症及 ADHD 的特教生阿簽進入了【名竹國中】。<br>
             起初一切順利，直到【希悉郝謗】因嫉妒而聯合【曉恩苑】發起霸凌。<br><br>
-            他們向你宣戰，玩井字旗，但輸贏是取決於阿簽最有障礙的【情緒控管】。<br>
-            一旦崩潰，且沒人安慰你，你就輸掉比賽，代價就是死亡。<br>
+            他們向你宣戰，玩井字旗，但輸贏卻取決於阿簽最有障礙的【情緒控管】。<br>
+            只要你崩潰，又沒人幫你，你就輸掉比賽，代價就是死亡。<br>
             阿簽，你能活下來嗎？
         </div>
         <button class="start-btn" onclick="startGame()">接受挑戰 (進入全螢幕)</button>
     </div>
-
-    <div id="transition-layer"></div>
 
     <div class="game-container">
         <div id="normal-ver" class="game-content">
@@ -129,13 +108,11 @@
             <div id="turn-n">輪到：阿簽 (O)</div>
             <div class="board" id="board-n"></div>
         </div>
-
         <div id="hard-ver" class="game-content">
             <h1 style="color:var(--accent-hard)">情緒生死戰：最終階段 (希悉郝謗)</h1>
             <div id="turn-h">輪到：阿簽 (O)</div>
             <div class="board" id="board-h"></div>
         </div>
-
         <div id="friend-ver" class="game-content">
             <h1 style="color:var(--accent-friend)">最後的溫暖：盛旦數</h1>
             <div id="turn-f">輪到：阿簽 (O)</div>
@@ -155,28 +132,20 @@
             n: { board: Array(9).fill(""), count: 0 },
             h: { board: Array(9).fill(""), count: 0 },
             f: { board: Array(9).fill(""), count: 0 },
-            currentType: 'n',
-            isGameOver: false
+            current: 'n',
+            locked: false
         };
 
         const msgs = {
-            n: { win: "你太兇了，我要殺了你！你一定下地獄！", lose: "我贏了！阿簽就是愛打小報告！", draw: "你知道我爸是誰嗎？平手你也死定了！" },
-            h: { win: "阿簽，你打這什麼外掛？準備約談一小時！", lose: "沒有人要理你，誰叫你打這麼菜！", draw: "平手而已，你是有多厲害？" },
-            f: { win: "你真的很厲害，絕對可以撐過去！", lose: "沒關係！我永遠支持你！", draw: "我們雙贏，這就是最好的結局！" }
+            n: { win: "你太兇了，我要殺了你！你一定下地獄，誰叫你要惹我", lose: "我贏了，所以我可以生氣！你看，阿簽就是很愛亂打小報告", draw: "你知道我爸爸是誰嗎？他是本校家長會長！竟然讓我平手，你死定了！" },
+            h: { win: "阿簽，你打這什麼外掛？準備跟迎旗約談一小時", lose: "沒有人要理你，沒有人要跟你好，誰叫你打這麼菜", draw: "平手又不是你贏，你是有多厲害" },
+            f: { win: "你真的很厲害，絕對可以撐過這段霸凌", lose: "沒關係！我永遠支持你", draw: "我們雙贏，這就是最好的結局" }
         };
 
-        // 啟動遊戲
         function startGame() {
-            // 先隱藏故事層
-            document.getElementById('story-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('story-overlay').style.display = 'none';
-                // 顯示第一關
-                showSection('normal');
-                // 嘗試全螢幕 (部分瀏覽器可能攔截)
-                const el = document.documentElement;
-                if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
-            }, 500);
+            document.getElementById('story-overlay').style.display = 'none';
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+            showSection('n');
         }
 
         function checkFullScreen() {
@@ -186,28 +155,18 @@
         }
 
         function showSection(type) {
-            const layer = document.getElementById('transition-layer');
-            layer.style.opacity = '1';
-            
-            setTimeout(() => {
-                document.querySelectorAll('.game-content').forEach(c => c.classList.remove('active'));
-                const targetId = type.includes('-ver') ? type : type + '-ver';
-                const target = document.getElementById(targetId);
-                if(target) target.classList.add('active');
-                
-                const shortType = type[0]; // n, h, f
-                state.currentType = shortType;
-                initBoard(shortType);
-                
-                layer.style.opacity = '0';
-            }, 400);
+            document.querySelectorAll('.game-content').forEach(c => c.classList.remove('active'));
+            state.current = type;
+            const target = { 'n': 'normal-ver', 'h': 'hard-ver', 'f': 'friend-ver' }[type];
+            document.getElementById(target).classList.add('active');
+            initBoard(type);
         }
 
         function initBoard(t) {
             const b = document.getElementById(`board-${t}`);
             b.innerHTML = '';
             state[t].board = Array(9).fill("");
-            state[t].isGameOver = false;
+            state.locked = false;
             for(let i=0; i<9; i++) {
                 let c = document.createElement('div');
                 c.className = 'cell';
@@ -218,22 +177,22 @@
         }
 
         function makeMove(t, idx) {
-            if (state[t].isGameOver || state[t].board[idx] !== "") return;
+            if (state.locked || state[t].board[idx] !== "") return;
             state[t].board[idx] = "O";
             updateUI(t);
             if (checkEnd(t, "O")) return;
 
-            // AI 回合
-            state[t].isGameOver = true; // 暫時鎖定
+            state.locked = true;
+            document.getElementById(`turn-${t}`).innerText = "對手思考中...";
             setTimeout(() => {
-                let move = getBestMove(state[t].board, "X");
-                if (move !== null) state[t].board[move] = "X";
+                let move = minimax(state[t].board, "X").index;
+                if (move !== undefined) state[t].board[move] = "X";
                 updateUI(t);
                 if (!checkEnd(t, "X")) {
-                    state[t].isGameOver = false;
+                    state.locked = false;
                     document.getElementById(`turn-${t}`).innerText = "輪到：阿簽 (O)";
                 }
-            }, 500);
+            }, 600);
         }
 
         function updateUI(t) {
@@ -248,10 +207,9 @@
             let win = checkWin(state[t].board, p);
             let draw = state[t].board.every(s => s !== "");
             if (win || draw) {
-                state[t].isGameOver = true;
                 state[t].count++;
-                let msgKey = win ? (p === "O" ? "win" : "lose") : "draw";
-                showResult(msgs[t][msgKey], t);
+                let key = win ? (p === "O" ? "win" : "lose") : "draw";
+                showResult(msgs[t][key], t);
                 return true;
             }
             return false;
@@ -263,7 +221,6 @@
             ot.innerText = txt;
             ot.style.color = (t === 'n' ? 'var(--accent-normal)' : (t === 'h' ? 'var(--accent-hard)' : 'var(--accent-friend)'));
             ov.style.display = 'flex';
-
             setTimeout(() => {
                 ov.style.display = 'none';
                 handleProgress(t);
@@ -275,31 +232,68 @@
                 document.getElementById('friend-btn').style.display = 'flex';
                 initBoard('n');
             } else if (t === 'f' && state.f.count === 30) {
-                alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！」");
+                alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！怕輸是不是？」");
                 document.getElementById('friend-btn').onclick = null;
-                showSection('hard');
+                showSection('h');
             } else if (t === 'h' && state.h.count === 40) {
                 document.getElementById('overlay-text').innerHTML = 
                     "「不是你怎麼都不生氣了？」<br>「好啦你贏了啦」<br><br><span style='color:white'>【希悉郝謗】已死亡</span><br>恭喜獲勝！";
                 document.getElementById('overlay').style.display = 'flex';
                 document.getElementById('replay-btn').style.display = 'inline-block';
-                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
             } else {
                 initBoard(t);
             }
         }
 
-        function enterFriendMode() { showSection('friend'); }
+        function enterFriendMode() { showSection('f'); }
 
         function checkWin(b, p) {
             const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
             return lines.some(l => l.every(i => b[i] === p));
         }
 
-        function getBestMove(board, player) {
-            let avail = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            if (avail.length === 0) return null;
-            return avail[Math.floor(Math.random() * avail.length)];
+        // 最強 AI 演算法
+        function minimax(newBoard, player) {
+            let availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            if (checkWin(newBoard, "O")) return { score: -10 };
+            if (checkWin(newBoard, "X")) return { score: 10 };
+            if (availSpots.length === 0) return { score: 0 };
+
+            let moves = [];
+            for (let i = 0; i < availSpots.length; i++) {
+                let move = {};
+                move.index = availSpots[i];
+                newBoard[availSpots[i]] = player;
+                if (player === "X") {
+                    let result = minimax(newBoard, "O");
+                    move.score = result.score;
+                } else {
+                    let result = minimax(newBoard, "X");
+                    move.score = result.score;
+                }
+                newBoard[availSpots[i]] = "";
+                moves.push(move);
+            }
+
+            let bestMove;
+            if (player === "X") {
+                let bestScore = -10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            } else {
+                let bestScore = 10000;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            }
+            return moves[bestMove];
         }
     </script>
 </body>
