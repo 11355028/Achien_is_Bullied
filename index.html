@@ -24,7 +24,7 @@
             overflow: hidden;
         }
 
-        /* 轉場層：初始透明度為0 */
+        /* 轉場層 */
         #transition-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -32,7 +32,7 @@
             z-index: 4000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.6s ease;
+            transition: opacity 0.4s ease;
         }
 
         /* 故事開場層 */
@@ -48,6 +48,8 @@
             padding: 40px;
             text-align: center;
             line-height: 1.8;
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
         #story-title { font-size: 3rem; color: var(--accent-hard); margin-bottom: 20px; text-shadow: 0 0 15px rgba(255,0,0,0.5); }
         #story-content { max-width: 800px; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
@@ -82,18 +84,18 @@
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        .game-content { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px; margin-top: 50px; }
-        .game-content.active { display: flex; }
+        .game-content { display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px; margin-top: 50px; opacity: 0; transition: opacity 0.5s ease; }
+        .game-content.active { display: flex; opacity: 1; }
 
         .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .cell { width: 100px; height: 100px; background-color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; cursor: pointer; border: 1px solid #333; }
         
-        #normal-ver .board { background-color: #1a0a2a; }
-        #hard-ver .board { background-color: #2a0a0a; }
-        #friend-ver .board { background-color: #1a2a3a; }
+        #normal-ver .board { background-color: #1a0a2a; border: 2px solid var(--accent-normal); }
+        #hard-ver .board { background-color: #2a0a0a; border: 2px solid var(--accent-hard); }
+        #friend-ver .board { background-color: #1a2a3a; border: 2px solid var(--accent-friend); }
 
-        .status-panel { text-align: center; font-size: 1.2rem; }
-        #replay-btn { display: none; padding: 10px 20px; background: white; color: black; border: none; cursor: pointer; margin-top: 20px; }
+        .status-panel { text-align: center; font-size: 1.2rem; margin-bottom: 10px; }
+        #replay-btn { display: none; padding: 10px 20px; background: white; color: black; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body onclick="checkFullScreen()">
@@ -105,8 +107,8 @@
         <div id="story-content">
             2024年9月，一個患有亞斯伯格症及 ADHD 的特教生阿簽進入了【名竹國中】。<br>
             起初一切順利，直到【希悉郝謗】因嫉妒而聯合【曉恩苑】發起霸凌。<br><br>
-            他們向你宣戰，要打井字棋，但輸贏條件卻是【情緒控管】。<br>
-            只要你崩潰，沒人幫你，你就輸了，而輸掉的代價就是---死亡。<br>
+            他們向你宣戰，玩井字旗，但輸贏條件卻是阿簽最有障礙的【情緒控管】。<br>
+            只要你崩潰，又沒人救你，你就輸了；而輸了的代價就是死亡。<br>
             阿簽，你能活下來嗎？
         </div>
         <button class="start-btn" onclick="startGame()">接受挑戰 (進入全螢幕)</button>
@@ -120,13 +122,13 @@
     <div id="friend-btn" onclick="enterFriendMode()">盛旦樹<br>支持你</div>
 
     <div id="normal-ver" class="game-content">
-        <h1 style="color:var(--accent-normal)">情緒生死戰：初階 (曉恩苑)</h1>
+        <h1 style="color:var(--accent-normal)">情緒生死戰：第一階段 (曉恩苑)</h1>
         <div class="status-panel"><div id="turn-n">輪到：阿簽 (O)</div></div>
         <div class="board" id="board-n"></div>
     </div>
 
     <div id="hard-ver" class="game-content">
-        <h1 style="color:var(--accent-hard)">情緒生死戰：進階 (希悉郝謗)</h1>
+        <h1 style="color:var(--accent-hard)">情緒生死戰：最終階段 (希悉郝謗)</h1>
         <div class="status-panel"><div id="turn-h">輪到：阿簽 (O)</div></div>
         <div class="board" id="board-h"></div>
     </div>
@@ -151,33 +153,50 @@
         };
 
         function startGame() {
+            // 嘗試進入全螢幕
             const docEl = document.documentElement;
-            if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(err => console.log("全螢幕請求被拒絕"));
+            }
+
+            // 處理 UI 切換：先淡出故事層，再顯示遊戲
+            const story = document.getElementById('story-overlay');
+            story.style.opacity = '0';
             
-            // 先隱藏故事層
-            document.getElementById('story-overlay').style.display = 'none';
-            // 直接顯示第一關
-            switchView('normal');
+            setTimeout(() => {
+                story.style.display = 'none';
+                switchView('normal');
+            }, 500);
         }
 
         function checkFullScreen() {
-            if (!document.fullscreenElement && document.getElementById('story-overlay').style.display === 'none') {
+            // 只有在遊戲開始後才檢測
+            if (document.getElementById('story-overlay').style.display === 'none' && !document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
         }
 
         function switchView(type) {
             const layer = document.getElementById('transition-layer');
-            layer.style.opacity = "1"; // 黑幕升起
+            layer.style.opacity = "1"; 
             
             setTimeout(() => {
-                // 隱藏所有遊戲區塊
-                document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
-                // 顯示目標區塊
-                document.getElementById(`${type}-ver`).classList.add('active');
+                // 清除所有 active 狀態
+                document.querySelectorAll('.game-content').forEach(el => {
+                    el.classList.remove('active');
+                    el.style.display = 'none';
+                });
+
+                // 顯示當前目標
+                const target = document.getElementById(`${type}-ver`);
+                target.style.display = 'flex';
+                // 強制瀏覽器重繪
+                target.offsetHeight; 
+                target.classList.add('active');
+                
                 initBoard(type);
-                layer.style.opacity = "0"; // 黑幕落下
-            }, 600);
+                layer.style.opacity = "0"; 
+            }, 500);
         }
 
         function initBoard(t) {
@@ -245,19 +264,16 @@
         }
 
         function checkProgression(t) {
-            // 第一階段 20 場
             if (t === 'n' && state.n.count === 20) {
                 document.getElementById('friend-btn').style.display = 'flex';
                 initBoard('n');
             } 
-            // 第二階段 30 場
             else if (t === 'f' && state.f.count === 30) {
                 alert("希悉郝謗：「看來他變強了，但這個程度還遠遠不及我，有種就跟我打啊！怕輸是不是？」");
                 document.getElementById('friend-btn').onclick = null;
                 document.getElementById('friend-btn').style.cursor = "default";
                 switchView('hard');
             }
-            // 第三階段 40 場
             else if (t === 'h' && state.h.count === 40) {
                 finalEnd();
             } else {
